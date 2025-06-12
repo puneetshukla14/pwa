@@ -6,29 +6,36 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable')
 }
 
-// ✅ Declare global mongoose cache (for hot reload in dev)
-declare global {
-  var mongooseCache: {
-    conn: typeof mongoose | null
-    promise: Promise<typeof mongoose> | null
-  }
+// ✅ Type-safe global cache declaration for TS + hot reload
+type MongooseCacheType = {
+  conn: typeof mongoose | null
+  promise: Promise<typeof mongoose> | null
 }
 
-// ✅ Setup global cache (for development, avoids reconnect on every request)
-global.mongooseCache = global.mongooseCache || { conn: null, promise: null }
+declare global {
+  var mongooseCache: MongooseCacheType | undefined
+}
 
-async function dbConnect() {
-  if (global.mongooseCache.conn) return global.mongooseCache.conn
+const globalCache = globalThis as typeof globalThis & {
+  mongooseCache: MongooseCacheType
+}
 
-  if (!global.mongooseCache.promise) {
-    global.mongooseCache.promise = mongoose.connect(MONGODB_URI, {
+if (!globalCache.mongooseCache) {
+  globalCache.mongooseCache = { conn: null, promise: null }
+}
+
+async function dbConnect(): Promise<typeof mongoose> {
+  if (globalCache.mongooseCache.conn) return globalCache.mongooseCache.conn
+
+  if (!globalCache.mongooseCache.promise) {
+    globalCache.mongooseCache.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
       dbName: 'expensexpro',
     })
   }
 
-  global.mongooseCache.conn = await global.mongooseCache.promise
-  return global.mongooseCache.conn
+  globalCache.mongooseCache.conn = await globalCache.mongooseCache.promise
+  return globalCache.mongooseCache.conn
 }
 
 export default dbConnect
