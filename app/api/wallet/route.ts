@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
-import Wallet from '@/models/wallet'
+import Expense from '@/models/expense'
 
 export async function GET() {
   try {
     await dbConnect()
-    const wallet = await Wallet.findOne({})
-    if (!wallet) {
-      return NextResponse.json({ error: 'No wallet data found' }, { status: 404 })
-    }
-    return NextResponse.json(wallet, { status: 200 })
+
+    const data = await Expense.aggregate([
+      { $group: { _id: '$paymentMethod', total: { $sum: '$amount' } } }
+    ])
+
+    return NextResponse.json({ success: true, data }, { status: 200 })
   } catch (err: any) {
-    console.error('❌ Error fetching wallet data:', err)
-    return NextResponse.json({ error: 'Failed to fetch wallet data', message: err.message }, { status: 500 })
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 })
   }
 }
