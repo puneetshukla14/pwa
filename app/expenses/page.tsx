@@ -202,6 +202,8 @@ export default function ExpensesPage() {
             </div>
           </div>
 
+
+
           {/* Options */}
           <div className="flex flex-wrap justify-between items-center gap-4">
             <label className="flex items-center gap-2 text-sm text-zinc-300">
@@ -213,6 +215,8 @@ export default function ExpensesPage() {
               Multi-entry Mode
             </label>
           </div>
+
+
 
           {/* Submit */}
           <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 transition text-white font-medium rounded-md py-3 text-center">

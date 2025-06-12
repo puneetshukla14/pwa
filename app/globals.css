@@ -3,5 +3,8 @@
 @tailwind utilities;
 
 html, body {
-  @apply h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white;
+  @apply min-h-screen bg-black text-white;
+  scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
 }
