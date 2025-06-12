@@ -12,5 +12,4 @@ const ExpenseSchema = new Schema({
   recurring: { type: Boolean, default: false },
   multiEntry: { type: Boolean, default: false },
 }, { timestamps: true })
-
 export default models.Expense || model('Expense', ExpenseSchema)

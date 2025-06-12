@@ -2,9 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  @apply min-h-screen bg-black text-white;
-  scroll-behavior: smooth;
-  margin: 0;
-  padding: 0;
+html,
+body {
+  height: 100%;
+  background-color: black;
+  color: white;
+  overflow: hidden; /* prevent body scroll unless you control it from child */
 }
