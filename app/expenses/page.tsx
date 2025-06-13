@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ExpensesTable from '@/components/expenses/ExpensesTable'
 import {
-  FiCalendar, FiClock, FiTag, FiMapPin, FiRepeat,
+  FiRefreshCw, FiCalendar, FiClock, FiTag, FiMapPin,
   FiFileText, FiCreditCard, FiDollarSign, FiSave
 } from 'react-icons/fi'
 
@@ -31,7 +32,7 @@ export default function ExpensesPage() {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [time, setTime] = useState(() => new Date().toTimeString().slice(0, 5))
-  const [includeTime, setIncludeTime] = useState(false)
+  const [includeTime, setIncludeTime] = useState(true)
   const [mainCategory, setMainCategory] = useState('Groceries')
   const [subCategory, setSubCategory] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('Cash')
@@ -43,6 +44,10 @@ export default function ExpensesPage() {
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([])
 
   useEffect(() => {
+    fetchDeviceLocation()
+  }, [])
+
+  const fetchDeviceLocation = async () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         async position => {
@@ -53,24 +58,27 @@ export default function ExpensesPage() {
             const city = data.address.city || data.address.town || data.address.village || ''
             const state = data.address.state || ''
             const country = data.address.country || ''
-            setLocation(`${city}, ${state}, ${country}`)
+            if (country.toLowerCase() === 'india') {
+              setLocation(`${city}, ${state}, ${country}`)
+            }
           } catch (err) {
             console.error('Reverse geocoding failed:', err)
           }
         },
         async error => {
-          console.warn('Location permission denied, using IP fallback')
           try {
             const res = await fetch('https://ipapi.co/json/')
             const d = await res.json()
-            setLocation(`${d.city}, ${d.region}, ${d.country_name}`)
+            if (d.country_name === 'India') {
+              setLocation(`${d.city}, ${d.region}, ${d.country_name}`)
+            }
           } catch (err) {
             console.error('IP location fetch error:', err)
           }
         }
       )
     }
-  }, [])
+  }
 
   const handleLocationInput = (q: string) => {
     setLocation(q)
@@ -89,11 +97,10 @@ export default function ExpensesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     const data = {
       amount: Number(amount),
       date,
-      time,
+      time: includeTime ? time : '',
       includeTime,
       category: `${mainCategory} - ${subCategory}`,
       paymentMethod,
@@ -110,7 +117,6 @@ export default function ExpensesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
-
       const result = await res.json()
       if (res.ok) {
         alert('Expense saved successfully!')
@@ -129,94 +135,26 @@ export default function ExpensesPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white px-4 py-6 sm:px-6 lg:px-8 overflow-auto">
-      <div className="w-full max-w-2xl mx-auto bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+      {/* --- Expense Form Card --- */}
+      <div className="w-full max-w-2xl mx-auto bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-[0_0_30px_rgba(0,0,0,0.5)] mb-12">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 tracking-tight">Add New Expense</h1>
-
         <form onSubmit={handleSubmit} className="space-y-6">
-          <InputField
-            label="Amount"
-            icon={<FiDollarSign />}
-            value={amount}
-            onChange={setAmount}
-            placeholder="Enter amount (e.g. 500)"
-            type="number"
-            required
-          />
-
+          <InputField label="Amount" icon={<FiDollarSign />} value={amount} onChange={setAmount} placeholder="Enter amount" type="number" required />
           <div className="grid sm:grid-cols-2 gap-4">
-            <InputField
-              label="Date"
-              icon={<FiCalendar />}
-              value={date}
-              onChange={setDate}
-              type="date"
-              required
-            />
-            {includeTime && (
-              <InputField
-                label="Time"
-                icon={<FiClock />}
-                value={time}
-                onChange={setTime}
-                type="time"
-              />
-            )}
+            <InputField label="Date" icon={<FiCalendar />} value={date} onChange={setDate} type="date" required />
+            {includeTime && <InputField label="Time" icon={<FiClock />} value={time} onChange={setTime} type="time" />}
           </div>
-
           <label className="flex items-center gap-2 text-sm text-zinc-300">
-            <input
-              type="checkbox"
-              checked={includeTime}
-              onChange={e => setIncludeTime(e.target.checked)}
-            />
-            Include Time
+            <input type="checkbox" checked={includeTime} onChange={e => setIncludeTime(e.target.checked)} />
+            Show Time Field
           </label>
-
           <div className="grid sm:grid-cols-2 gap-4">
-            <SelectField
-              label="Main Category"
-              icon={<FiTag />}
-              value={mainCategory}
-              onChange={(e: string) => {
-                setMainCategory(e)
-                setSubCategory('')
-              }}
-              options={Object.keys(categoryOptions)}
-            />
-
-            <SelectField
-              label="Subcategory"
-              icon={<FiTag />}
-              value={subCategory}
-              onChange={setSubCategory}
-              options={categoryOptions[mainCategory]}
-              placeholder="Select subcategory"
-            />
+            <SelectField label="Main Category" icon={<FiTag />} value={mainCategory} onChange={(e: string) => { setMainCategory(e); setSubCategory('') }} options={Object.keys(categoryOptions)} />
+            <SelectField label="Subcategory" icon={<FiTag />} value={subCategory} onChange={setSubCategory} options={categoryOptions[mainCategory]} placeholder="Select subcategory" />
           </div>
-
-          <SelectField
-            label="Payment Method"
-            icon={<FiCreditCard />}
-            value={paymentMethod}
-            onChange={setPaymentMethod}
-            options={['Cash', 'Card', 'UPI', 'Wallet', 'Bank Transfer', 'Other']}
-          />
-
-          <TextAreaField
-            label="Notes"
-            icon={<FiFileText />}
-            value={notes}
-            onChange={setNotes}
-            placeholder="Additional details (optional)"
-          />
-
-          <InputField
-            label="Tags"
-            icon={<FiTag />}
-            value={tags}
-            onChange={setTags}
-            placeholder="e.g. groceries, weekend"
-          />
+          <SelectField label="Payment Method" icon={<FiCreditCard />} value={paymentMethod} onChange={setPaymentMethod} options={['Cash', 'Card', 'UPI', 'Wallet', 'Bank Transfer', 'Other']} />
+          <TextAreaField label="Notes" icon={<FiFileText />} value={notes} onChange={setNotes} placeholder="Additional details (optional)" />
+          <InputField label="Tags" icon={<FiTag />} value={tags} onChange={setTags} placeholder="e.g. groceries, weekend" />
 
           <div className="relative">
             <label className="text-sm font-medium text-zinc-300 block mb-1">Location</label>
@@ -227,13 +165,21 @@ export default function ExpensesPage() {
                 placeholder="City, State"
                 value={location}
                 onChange={e => handleLocationInput(e.target.value)}
-                className="bg-neutral-800 pl-10 pr-4 py-3 w-full rounded-md border border-neutral-700 placeholder:text-zinc-500 focus:outline focus:outline-blue-500 transition-all duration-200"
+                className="bg-neutral-800 pl-10 pr-10 py-3 w-full rounded-md border border-neutral-700 placeholder:text-zinc-500 focus:outline focus:outline-blue-500 transition-all duration-200"
               />
+              <button
+                type="button"
+                onClick={fetchDeviceLocation}
+                className="absolute right-3 top-[10px] text-blue-400 hover:text-blue-600"
+                title="Refresh location"
+              >
+                <FiRefreshCw size={18} />
+              </button>
               {locationSuggestions.length > 0 && (
                 <ul className="absolute z-50 mt-1 bg-neutral-800 border border-neutral-700 w-full rounded-md max-h-40 overflow-auto text-sm sm:text-base">
-                  {locationSuggestions.map(loc => (
+                  {locationSuggestions.map((loc, index) => (
                     <li
-                      key={loc}
+                      key={`${loc}-${index}`}
                       onClick={() => {
                         setLocation(loc)
                         setLocationSuggestions([])
@@ -259,20 +205,25 @@ export default function ExpensesPage() {
             </label>
           </div>
 
-          <button
-            type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3 text-lg transition-all duration-200"
-          >
+          <button type="submit" className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3 text-lg transition-all duration-200">
             <FiSave size={20} />
             Save Expense
           </button>
         </form>
       </div>
+
+      {/* --- Expenses Table Card --- */}
+      <div className="w-full max-w-5xl mx-auto bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-[0_0_30px_rgba(0,0,0,0.5)] mt-12">
+        <h2 className="text-xl font-semibold mb-4">Recent Expenses</h2>
+        <ExpensesTable />
+      </div>
     </div>
   )
 }
 
-// --- Reusable Input Components ---
+// ---------------------
+// 🔧 Helper Components
+// ---------------------
 
 function InputField({ label, icon, value, onChange, ...rest }: any) {
   return (

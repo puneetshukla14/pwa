@@ -1,4 +1,5 @@
 import './globals.css'
+
 import SidebarWrapper from './SidebarWrapper'
 
 export const metadata = {

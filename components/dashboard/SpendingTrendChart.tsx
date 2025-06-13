@@ -133,33 +133,39 @@ export default function TrendChartDark() {
     },
   }
 
-  return (
-    <div className="w-full max-w-5xl mx-auto bg-zinc-900/80 border border-zinc-800 backdrop-blur-md rounded-xl p-6 shadow-xl">
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap justify-center md:justify-end gap-2 mb-4">
-        {TIME_OPTIONS.map((range) => (
-          <button
-            key={range}
-            onClick={() => setSelectedRange(range)}
-            className={clsx(
-              'px-4 py-1.5 text-sm font-medium rounded-full border transition-all duration-200',
-              selectedRange === range
-                ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
-            )}
-          >
-            {range}
-          </button>
-        ))}
-      </div>
 
-      {/* Title */}
-      <h2 className="text-xl font-semibold text-white mb-2">Spending Trend</h2>
 
-      {/* Chart */}
-      <div className="h-64 sm:h-80 md:h-[28rem]">
-        <Line data={chartData} options={chartOptions} />
-      </div>
+
+
+
+return (
+  <div className="w-full max-w-2xl mx-auto bg-[#1f1f1f] rounded-2xl border border-neutral-800 shadow-lg p-6 sm:p-8 h-[450px]">
+    {/* Filter Buttons */}
+    <div className="flex flex-wrap justify-center md:justify-end gap-2 mb-4">
+      {TIME_OPTIONS.map((range) => (
+        <button
+          key={range}
+          onClick={() => setSelectedRange(range)}
+          className={clsx(
+            'px-4 py-1.5 text-sm font-medium rounded-full border transition-all duration-200',
+            selectedRange === range
+              ? 'bg-blue-600 text-white border-blue-500 shadow-md'
+              : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+          )}
+        >
+          {range}
+        </button>
+      ))}
     </div>
-  )
+
+    {/* Title */}
+    <h2 className="text-xl font-semibold text-white mb-2">Spending Trend</h2>
+
+    {/* Chart */}
+    <div className="h-[300px]">
+      <Line data={chartData} options={chartOptions} />
+    </div>
+  </div>
+)
+
 }
